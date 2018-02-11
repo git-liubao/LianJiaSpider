@@ -1,3 +1,8 @@
 *.db
 *.pyc
 log.txt
+venv/
+venv1/
+venv2/
+.idea/
+lianjia-xq.db-journal
