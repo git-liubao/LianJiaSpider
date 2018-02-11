@@ -166,7 +166,7 @@ def xiaoqu_spider(db_xq,url_page=u"http://bj.lianjia.com/xiaoqu/pg1rs%E6%98%8C%E
         if year:
             year = year[0]
         else:
-            year = '未知年'
+            year = ''
 
         info_dict.update({u'大区域': district})
         info_dict.update({u'小区域': bizcircle})
@@ -227,34 +227,61 @@ def chengjiao_spider(db_cj,url_page=u"http://bj.lianjia.com/chengjiao/pg1rs%E5%8
         exception_write('chengjiao_spider',url_page)
         return
     
-    cj_list=soup.findAll('div',{'class':'info-panel'})
+    cj_list=soup.findAll('div',{'class':'info'})
     for cj in cj_list:
         info_dict={}
         href=cj.find('a')
         if not href:
             continue
         info_dict.update({u'链接':href.attrs['href']})
-        content=cj.find('h2').text.split()
+
+        content=cj.find('a').text.split()
         if content:
             info_dict.update({u'小区名称':content[0]})
             info_dict.update({u'户型':content[1]})
-            info_dict.update({u'面积':content[2]})
-        content=unicode(cj.find('div',{'class':'con'}).renderContents().strip())
-        content=content.split('/')
+
+            area = content[2]
+            index = area.find(u'平米')
+            if index < 0:
+                index = 0
+            area = area[0:index]
+            info_dict.update({u'面积':area})
+
+        content=cj.find('div',{'class':'houseInfo'}).text.split('|')
         if content:
             info_dict.update({u'朝向':content[0].strip()})
-            info_dict.update({u'楼层':content[1].strip()})
-            if len(content)>=3:
-                content[2]=content[2].strip();
-                info_dict.update({u'建造时间':content[2][:4]}) 
-        content=cj.findAll('div',{'class':'div-cun'})
+
+        content = cj.find('div', {'class': 'positionInfo'}).text.split(' ')
         if content:
-            info_dict.update({u'签约时间':content[0].text})
-            info_dict.update({u'签约单价':content[1].text})
-            info_dict.update({u'签约总价':content[2].text})
-        content=cj.find('div',{'class':'introduce'}).text.strip().split()
+            info_dict.update({u'楼层':content[0].strip()})
+            year = content[1].strip()
+            index = year.find(u'年')
+            if index < 0:
+                index = 0
+            year = year[0:index]
+            info_dict.update({u'建造时间': year})
+
+        info_dict.update({u'签约时间': cj.find('div', {'class': 'dealDate'}).text})
+
+        unit_price = cj.find('div', {'class': 'unitPrice'}).text
+        index = unit_price.find(u'元/平')
+        if index < 0:
+            index = 0
+        unit_price = unit_price[0:index]
+        info_dict.update({u'签约单价': unit_price})
+
+        total_price = cj.find('div', {'class': 'totalPrice'}).text
+        index = total_price.find(u'万')
+        if index < 0:
+            index = 0
+        total_price = total_price[0:index]
+        info_dict.update({u'签约总价': total_price})
+
+        content=cj.find('span',{'class':'dealHouseTxt'})
         if content:
-            for c in content:
+            content = content.findAll('span')
+            for con in content:
+                c = con.text
                 if c.find(u'满')!=-1:
                     info_dict.update({u'房产类型':c})
                 elif c.find(u'学')!=-1:
