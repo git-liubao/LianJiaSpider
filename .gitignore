@@ -6,3 +6,5 @@ venv1/
 venv2/
 .idea/
 lianjia-xq.db-journal
+*.csv
+*.pbix
